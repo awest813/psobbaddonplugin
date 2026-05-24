@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSOBB Addon Launcher</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>PSOBB Addon Launcher</h1>
+        <p class="subtle">Windows-first launcher for installing/updating this addon package.</p>
+      </header>
+
+      <section class="card">
+        <h2>Status</h2>
+        <pre id="status">Loading…</pre>
+        <div class="actions">
+          <button id="refresh-status">Refresh status</button>
+          <button id="launch-game">Launch game</button>
+          <button id="rollback">Rollback last install</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Settings</h2>
+        <label for="install-path">PSOBB install directory</label>
+        <input id="install-path" placeholder="C:\\Path\\To\\PSOBB" />
+        <div class="actions">
+          <button id="save-install-path">Save install path</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Install from local zip</h2>
+        <label for="zip-path">Path to bbmod.zip</label>
+        <input id="zip-path" placeholder="C:\\Path\\To\\bbmod.zip" />
+        <div class="actions">
+          <button id="preflight-local">Preflight</button>
+          <button id="dry-run-local">Dry-run install</button>
+          <button id="install-local" class="danger">Install / Update</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Install latest release</h2>
+        <p class="subtle">Downloads latest <code>bbmod.zip</code> from GitHub releases, verifies checksum when available, then installs.</p>
+        <div class="actions">
+          <button id="fetch-latest">Check latest release</button>
+          <button id="dry-run-latest">Dry-run latest install</button>
+          <button id="install-latest" class="danger">Install latest release</button>
+        </div>
+        <pre id="latest-release">Not fetched yet.</pre>
+      </section>
+
+      <section class="card">
+        <h2>Logs</h2>
+        <div class="actions">
+          <button id="refresh-logs">Refresh logs</button>
+        </div>
+        <pre id="logs"></pre>
+      </section>
+
+      <section class="card warning">
+        <h2>Runtime dependency reminder</h2>
+        <p>
+          This addon requires the <strong>Visual C++ Redistributable for Visual Studio 2015</strong>
+          in the target game environment.
+        </p>
+      </section>
+
+      <pre id="result" class="result"></pre>
+    </main>
+  </body>
+</html>

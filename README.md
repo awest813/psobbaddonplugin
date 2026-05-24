@@ -10,10 +10,25 @@ which can read the game's memory and present additional useful information.
 
 ## Installation
 
-1. Download the latest release from the [Releases](https://github.com/HybridEidolon/psobbaddonplugin/releases) page
-and extract the zip contents to your PSOBB directory.
-2. Install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
+### Preferred: Tauri launcher (Windows-first)
+
+1. Build or download the launcher artifacts (see [`launcher/README.md`](./launcher/README.md)).
+2. Open **PSOBB Addon Launcher** and set your PSOBB install path.
+3. Use either:
+   - **Install latest release** (downloads latest `bbmod.zip` from GitHub Releases), or
+   - **Install from local zip** (manual path to `bbmod.zip`).
+4. Use preflight/dry-run before install for safer updates.
+5. Launch the game from the launcher.
+
+### Manual fallback install
+
+1. Download the latest release zip from the [Releases](https://github.com/HybridEidolon/psobbaddonplugin/releases) page.
+2. Extract the zip contents to your PSOBB directory.
 3. Run the game.
+
+### Runtime dependency
+
+Install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
 
 ## Building and Testing
 
@@ -23,6 +38,27 @@ To test the lua code, install luacheck and busted from luarocks and
     $ busted
 
 To build the plugin dll, use Visual Studio 2015.
+
+### Launcher development
+
+The launcher is isolated under `launcher/` so plugin build flow stays stable.
+
+    $ cd launcher
+    $ npm install
+    $ npm run tauri:dev
+
+For production launcher bundles (Windows preferred):
+
+    $ npm run tauri:build
+
+## Release artifact layout
+
+Current release payload for plugin install/update remains `bbmod.zip`.
+The launcher consumes this zip directly and applies an allowlisted subset of files.
+Recommended published artifacts for combined releases:
+
+- `bbmod.zip` (plugin payload)
+- launcher installer/portable bundle(s) from `launcher/src-tauri/target/release/bundle/`
 
 ## Usage
 
