@@ -29,6 +29,22 @@ test_script:
   - busted
 
 after_test:
+  - ps: |
+      if ($Env:CONFIGURATION -eq "Release") {
+        $pushed = $false
+        try {
+          Push-Location launcher
+          $pushed = $true
+          npm install
+          npm run tauri:build
+        } catch {
+          Write-Warning "Launcher build failed or prerequisites missing; continuing with plugin artifact packaging."
+        } finally {
+          if ($pushed) {
+            Pop-Location
+          }
+        }
+      }
   - ps: ci/after_build.ps1
 
 deploy:

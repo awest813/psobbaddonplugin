@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "launcher",
+  "productName": "PSOBB Addon Launcher",
   "version": "0.1.0",
-  "identifier": "com.runner.launcher",
+  "identifier": "com.awest813.psobbaddonplugin.launcher",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,9 +10,10 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "launcher",
-        "width": 800,
-        "height": 600
+        "title": "PSOBB Addon Launcher",
+        "width": 980,
+        "height": 820,
+        "resizable": true
       }
     ],
     "security": {
