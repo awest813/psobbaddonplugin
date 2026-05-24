@@ -10,12 +10,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 use zip::ZipArchive;
 
-const RELEASE_OWNER: &str = "awest813";
-const RELEASE_REPO: &str = "psobbaddonplugin";
+const DEFAULT_RELEASE_OWNER: &str = "awest813";
+const DEFAULT_RELEASE_REPO: &str = "psobbaddonplugin";
 const CONFIG_FILE: &str = "config.json";
 const LOG_FILE: &str = "launcher.log";
 const INSTALL_MANIFEST_FILE: &str = "bbmod-launcher-manifest.json";
 const BACKUP_MANIFEST_FILE: &str = "backup-manifest.json";
+const CHECKSUM_BUFFER_SIZE: usize = 8192;
+const SHA256_HEX_LENGTH: usize = 64;
+const GAME_EXECUTABLE_CANDIDATES: &[&str] = &["online.exe", "pso.exe", "psobb.exe"];
 const ALLOWED_ROOT_FILES: &[&str] = &["dinput8.dll", "dinput8.pdb", "README.md", "CHANGELOG.md"];
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -121,6 +124,18 @@ fn app_data_root(app: &AppHandle) -> Result<PathBuf, String> {
     let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     Ok(root)
+}
+
+fn release_owner() -> &'static str {
+    option_env!("PSOBB_RELEASE_OWNER").unwrap_or(DEFAULT_RELEASE_OWNER)
+}
+
+fn release_repo() -> &'static str {
+    option_env!("PSOBB_RELEASE_REPO").unwrap_or(DEFAULT_RELEASE_REPO)
+}
+
+fn expected_executable_names_csv() -> String {
+    GAME_EXECUTABLE_CANDIDATES.join(", ")
 }
 
 fn config_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -423,7 +438,7 @@ fn read_install_manifest(install_path: &Path) -> Option<InstallManifest> {
 fn verify_checksum_internal(path: &Path, expected_sha256: &str) -> Result<bool, String> {
     let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
     let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 8192];
+    let mut buffer = [0u8; CHECKSUM_BUFFER_SIZE];
 
     loop {
         let read = file.read(&mut buffer).map_err(|e| e.to_string())?;
@@ -440,7 +455,8 @@ fn verify_checksum_internal(path: &Path, expected_sha256: &str) -> Result<bool, 
 fn fetch_latest_release_internal() -> Result<ReleaseInfo, String> {
     let url = format!(
         "https://api.github.com/repos/{}/{}/releases/latest",
-        RELEASE_OWNER, RELEASE_REPO
+        release_owner(),
+        release_repo()
     );
 
     let client = Client::builder()
@@ -612,10 +628,10 @@ fn get_status(app: AppHandle) -> Result<LauncherStatus, String> {
         warnings.push("Install path is not configured or does not exist".to_string());
     }
     if install_path_exists && !game_executable_exists {
-        warnings.push(
-            "No expected game executable (online.exe/pso.exe/psobb.exe) found in selected folder"
-                .to_string(),
-        );
+        warnings.push(format!(
+            "No expected game executable ({}) found in selected folder",
+            expected_executable_names_csv()
+        ));
     }
     if !addon_installed {
         warnings.push("Addon files are not fully installed in selected folder".to_string());
@@ -803,7 +819,9 @@ fn install_latest_release(
                 .map_err(|e| e.to_string())?;
             let first = downloaded
                 .split_whitespace()
-                .find(|part| part.len() == 64 && part.chars().all(|c| c.is_ascii_hexdigit()))
+                .find(|part| {
+                    part.len() == SHA256_HEX_LENGTH && part.chars().all(|c| c.is_ascii_hexdigit())
+                })
                 .map(|s| s.to_string());
             checksum_to_use = first;
         }
@@ -865,16 +883,15 @@ fn rollback_last_install(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 fn launch_game(app: AppHandle) -> Result<String, String> {
     let install = resolve_install_path(&app, None)?;
-    let candidates = ["online.exe", "pso.exe", "psobb.exe"];
-
-    let executable = candidates
+    let executable = GAME_EXECUTABLE_CANDIDATES
         .iter()
         .map(|name| install.join(name))
         .find(|path| path.exists())
         .ok_or_else(|| {
             format!(
-                "No game executable found in {} (looked for online.exe, pso.exe, psobb.exe)",
-                install.display()
+                "No game executable found in {} (looked for {})",
+                install.display(),
+                expected_executable_names_csv()
             )
         })?;
 
